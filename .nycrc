@@ -1,0 +1,23 @@
+{
+  "per-file": true,
+  "include": [
+    "./src/**/*.js"
+  ],
+  "exclude": [
+    "./src/**/*.spec.js"
+  ],
+  "reporter": [
+    "lcov",
+    "text-summary",
+    "text"
+  ],
+  "require": [
+    "@babel/register"
+  ],
+  "sourceMap": false,
+  "instrument": false,
+  "cache": false,
+  "all": true,
+  "temp-directory": "./dist/coverage/tmp",
+  "report-dir": "./dist/coverage"
+}

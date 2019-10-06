@@ -1,1 +1,1 @@
-# calix-csr-console
+# Calix CSR Console
