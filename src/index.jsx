@@ -5,7 +5,7 @@ import LoadingScreen from './components/initalLoad/loading';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import * as HttpStatuses from './components/errorMessages/httpStatus';
-// import * as ErrPages from './components/errorMessages/errPages';
+import * as ErrPages from './components/errorMessages/errPages';
 
 // Common libraries
 import { global } from './config';
@@ -33,8 +33,12 @@ const CsrRouter = () => (
       <Switch>
         <PrivateRoute path="/cpe" component={Cpe} />
         <PrivateRoute path="/systems" component={Systems} />
-        <PrivateRoute path="/" component={Homepage} />
-        
+        <PrivateRoute exact path="/" component={Homepage} />
+
+        <Route path="/lockout" component={ErrPages.lockout} />
+        <Route path="/blockedip" component={ErrPages.blockedip} />
+        <Route path="/denied" component={ErrPages.denied} />
+        <Route path="/incompatible" component={ErrPages.incompatible} />
         <Route path="/400" component={HttpStatuses.status400} />
         <Route path="/401" component={HttpStatuses.status401} />
         <Route path="/403" component={HttpStatuses.status403} />
