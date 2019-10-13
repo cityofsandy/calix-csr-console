@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Row, Col, Form } from 'react-bootstrap';
+import { Button, Row, Col, Form, Card } from 'react-bootstrap';
 import CalixCloud from '../../calix/cloud';
+import CalixSmx from '../../calix/smx';
 import CpeShow from './cpeShow';
 import { getStorage, setStorage } from '../../js/common';
 
@@ -16,8 +17,12 @@ class CpeSearch extends React.Component {
       systems: [],
 
       cloudResultJson: false,
+      smxResultJson: [],
     };
 
+    this.cloudInstance = null;
+    this.smxInstances = [];
+    this.cmsInstances = [];
     
     this.setText = this.setText.bind(this);
     this.setCheckBox = this.setCheckBox.bind(this);
@@ -35,6 +40,9 @@ class CpeSearch extends React.Component {
           if (system.type === 'cloud') {
             this.cloudInstance = new CalixCloud(system.username, system.password);
             console.log('Calix Cloud Instance Loaded');
+          } else if (system.type === 'smx') {
+            const url = (system.https ? 'https://' : 'http') + system.hostname + ':18443';
+            this.smxInstances.push(new CalixSmx(system.username, system.password, url));
           }
         }
       });
@@ -82,6 +90,35 @@ class CpeSearch extends React.Component {
               console.log('fail', fail);
             });
           }
+
+          if (this.smxInstances.length > 0) {
+            const smxResultJson = [];
+            this.smxInstances.forEach((instance) => {
+              instance.getAllDevices().then((success) => {
+                const devicePromises = [];
+
+                success.forEach((device) => {
+                  devicePromises.push(
+                    instance.getOntFromDeviceSerial(device['device-name'], searchQuery),
+                  );
+                });
+                console.log(devicePromises);
+                Promise.allSettled(devicePromises).then((values) => {
+                  console.log(values);
+                  values.forEach((item) => {
+                    if (item.status === 'fulfilled') {
+                      smxResultJson.push(item.value);
+                    }
+                  });
+                  this.setState({
+                    smxResultJson,
+                  });
+                });
+              }, (fail) => {
+                console.log('fail', fail);
+              });
+            });
+          }
           break;
         default:
           // default stuff
@@ -94,33 +131,41 @@ class CpeSearch extends React.Component {
       searchQuery,
       searchType,
       cloudResultJson,
+      smxResultJson,
     } = this.state;
     return (
       <React.Fragment>
-        <Row>
-          <Col md={7} lg={8}>
-            <Form.Group controlId="search">
-              <Form.Label>Query String</Form.Label>
-              <Form.Control type="text" placeholder="Enter Search Criteria" name="searchQuery" value={searchQuery} onChange={this.setText}/>
-            </Form.Group>
-          </Col>
-          <Col md={3} lg={3}>
-            <Form.Group as={Col} controlId="searchType" name="searchType" value={searchType} onChange={this.setText}>
-              <Form.Label>Parameter</Form.Label>
-              <Form.Control as="select">
-                <option value="fsan"> FSAN</option>
-                <option>...</option>
-              </Form.Control>
-            </Form.Group>
-          </Col>
-          <Col md={2} lg={1}>
-            <Form.Label>&nbsp;</Form.Label>
-            <Button variant="primary" onClick={this.searchAction}>Search</Button>
-          </Col>
-        </Row>
-        <CpeShow cloudResultJson={cloudResultJson} />
-      </React.Fragment>
+        <Card>
+          <Card.Body>
 
+            <Row>
+              <Col lg={8}>
+                <Form.Group controlId="search">
+                  <Form.Label>Query String</Form.Label>
+                  <Form.Control type="text" placeholder="Enter Search Criteria" name="searchQuery" value={searchQuery} onChange={this.setText} />
+                </Form.Group>
+              </Col>
+              <Col lg={3}>
+                <Form.Group controlId="searchType" name="searchType" value={searchType} onChange={this.setText}>
+                  <Form.Label>Parameter</Form.Label>
+                  <Form.Control as="select">
+                    <option value="fsan"> FSAN</option>
+                    <option>...</option>
+                  </Form.Control>
+                </Form.Group>
+              </Col>
+              <Col lg={1}>
+                <Form.Group>
+                  <Form.Label>&nbsp;</Form.Label>
+                  <Button variant="primary" onClick={this.searchAction}>Search</Button>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+        <br /><br />
+        <CpeShow cloudResultJson={cloudResultJson} smxResultJson={smxResultJson} />
+      </React.Fragment>
     );
   }
 }
