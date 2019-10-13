@@ -39,16 +39,13 @@ class App extends React.Component {
                   <LinkContainer to="/serviceProvider">
                     <Nav.Link>Service Provider</Nav.Link>
                   </LinkContainer>
-                  <NavDropdown title="Dropdown" id="collasible-nav-dropdown">
+                  <NavDropdown title="Options" id="collasible-nav-dropdown">
                     <LinkContainer to="/systems">
                       <NavDropdown.Item>Systems Management</NavDropdown.Item>
                     </LinkContainer>
-                    <NavDropdown.Divider />
-                    <NavDropdown.Item href="#action/3.4">Separated link</NavDropdown.Item>
                   </NavDropdown>
                 </Nav>
                 <Nav>
-                  <Nav.Link href="#deets">More deets</Nav.Link>
                   <Nav.Link eventKey={2} href="#memes">
                     Dank memes
                   </Nav.Link>
