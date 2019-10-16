@@ -8,15 +8,12 @@ class CpeShow extends React.Component {
     this.props = props;
   }
 
-
-
   render() {
     const {
       cloudResultJson,
       smxResultJson,
     } = this.props;
 
-    console.log(smxResultJson);
     return (
       <React.Fragment>
         {Object.keys(cloudResultJson).length > 0 && (
@@ -118,6 +115,18 @@ class CpeShow extends React.Component {
                         <tr>
                           <td>MTA MAC Address</td>
                           <td>{item['mta-mac-addr']}</td>
+                        </tr>
+                        <tr>
+                          <td>Description</td>
+                          <td>{item.description}</td>
+                        </tr>
+                        <tr>
+                          <td>Location</td>
+                          <td>{item.location}</td>
+                        </tr>
+                        <tr>
+                          <td>Status</td>
+                          <td>{item.status}</td>
                         </tr>
                       </tbody>
                     </Table>

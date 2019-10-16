@@ -19,6 +19,30 @@ module.exports = merge(common, {
         changeOrigin: false,
         secure: false,
       },
+      '/calixCms': {
+        target: 'http://example.com',
+        pathRewrite: (urlPath) => { 
+          return urlPath.replace(/calixCms\/(http|https):\/\/(.*?)\//g, '');
+        },
+        changeOrigin: true,
+        secure: false,
+        logLevel: 'debug',
+        router: (req) => {
+          return req.path.match(/(http|https):\/\/(.*?)\//g, '')[0];
+        },
+      },
+      '/calixSmx': {
+        target: 'http://example.com',
+        pathRewrite: (urlPath) => { 
+          return urlPath.replace(/calixSmx\/(http|https):\/\/(.*?)\//g, '');
+        },
+        changeOrigin: true,
+        secure: false,
+        logLevel: 'debug',
+        router: (req) => {
+          return req.path.match(/(http|https):\/\/(.*?)\//g, '')[0];
+        },
+      },
     },
   },
 });

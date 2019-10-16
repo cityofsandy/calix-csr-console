@@ -4,7 +4,7 @@ class CalixSmx {
   constructor(username, password, url) {
     this.username = username;
     this.password = password;
-    this.url = url + '/rest/v1';
+    this.url = '/calixSmx/' + url + '/rest/v1';
   }
 
   jsonRequest(urlParam, type = 'get', args = {}, fetchOptions = {}) {
@@ -46,6 +46,7 @@ class CalixSmx {
       };
 
       fetch(url, options).then((response) => {
+        console.log(response);
         responseCode = response.status;
         return response.json();
       }).then((result) => {
