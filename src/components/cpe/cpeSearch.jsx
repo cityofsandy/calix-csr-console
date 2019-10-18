@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button, Row, Col, Form, Card } from 'react-bootstrap';
 import CalixCloud from '../../calix/cloud';
 import CalixSmx from '../../calix/smx';
+import CalixCms from '../../calix/cms';
 import CpeShow from './cpeShow';
 import { getStorage, setStorage } from '../../js/common';
 
@@ -23,7 +24,7 @@ class CpeSearch extends React.Component {
     this.cloudInstance = null;
     this.smxInstances = [];
     this.cmsInstances = [];
-    
+
     this.setText = this.setText.bind(this);
     this.setCheckBox = this.setCheckBox.bind(this);
     this.searchAction = this.searchAction.bind(this);
@@ -41,10 +42,16 @@ class CpeSearch extends React.Component {
             this.cloudInstance = new CalixCloud(system.username, system.password);
             console.log('Calix Cloud Instance Loaded');
           } else if (system.type === 'smx') {
-            const url = (system.https ? 'https://' : 'http') + system.hostname + ':18443';
+            const url = (system.https ? 'https://' : 'http://') + system.hostname + ':18443';
             this.smxInstances.push(new CalixSmx(system.username, system.password, url));
+            console.log('Calix SMx Instance Loaded');
+          } else if (system.type === 'cms') {
+            const url = (system.https ? 'https://' : 'http://') + system.hostname + (system.https ? ':18443' : ':18080');
+            this.cmsInstances.push(new CalixCms(system.username, system.password, url));
+            console.log('Calix CMS Instance Loaded');
           }
         }
+        this.cmsInstances[0].getSystems();
       });
     } else {
       this.setState({
