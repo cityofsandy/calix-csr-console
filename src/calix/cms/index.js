@@ -109,13 +109,51 @@ class CalixCms {
   }
 
   getSystems() {
+    // Log into CMS
     this.login().then(() => {
       console.log(this.sessionId);
-      this.logout().then(() => {
-        console.log('logged out');
-      }, (logoutRej) => {
-        console.error('Error logging out', logoutRej);
-      });
+
+      const body = `
+        <?xml version="1.0" encoding="UTF-8"?>
+        <soapenv:Envelope xmlns:soapenv="www.w3.org/2003/05/soap-envelope">
+          <soapenv:Body>
+          <rpc message-id="2" nodename="AeCMSNetwork" timeout="35000" sessionid="${this.sessionId}" username="${this.username}">
+            <get-config>
+              <source>
+                <running/>
+              </source>
+              <filter type="subtree">
+                <top>
+                  <object>
+                    <type>System</type>
+                    <id/>
+                    <children>
+                      <type>AeSettings</type>
+                      <adv-filters>
+                        <adv-filter></adv-filter>
+                      </adv-filters>
+                    </children>
+                  </object>
+                </top>
+              </filter>
+            </get-config>
+          </rpc>
+          </soapenv:Body>
+       </soapenv:Envelope>
+      `;
+
+      this.xmlSoapRequest(body)
+        .then((res) => {
+          console.log(res);
+          // Log out of CMS when completed
+          this.logout().then(() => {
+            console.log('logged out');
+          }, (logoutRej) => {
+            console.error('Error logging out', logoutRej);
+          });
+        }, (failed) => {
+          console.log(failed);
+        });
     }, (loginRej) => {
       console.error('Error logging in', loginRej);
     });

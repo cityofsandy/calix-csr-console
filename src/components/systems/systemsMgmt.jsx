@@ -16,9 +16,12 @@ class CpeSearch extends React.Component {
       modalShow: false,
       modalHostname: '',
       modalType: 'cms',
+      modalCmsNodes: [],
       modalHttps: false,
       modalUsername: '',
       modalPassword: '',
+      modalAddCmsHostName: '',
+      modalAddCmsHostType: 'e7',
       editing: false,
     };
 
@@ -26,6 +29,10 @@ class CpeSearch extends React.Component {
       { key: 'cms', value: 'CMS' },
       { key: 'smx', value: 'SMx' },
       { key: 'cloud', value: 'Calix Cloud' },
+    ];
+
+    this.modalAddCmsHostSelect = [
+      { key: 'e7', value: 'E7' },
     ];
 
     this.handleClose = this.handleClose.bind(this);
@@ -37,6 +44,7 @@ class CpeSearch extends React.Component {
     this.editManagementSystem = this.editManagementSystem.bind(this);
     this.editManagementSystemAction = this.editManagementSystemAction.bind(this);
     this.deleteManagementSystemAction = this.deleteManagementSystemAction.bind(this);
+    this.addCmsHost = this.addCmsHost.bind(this);
   }
 
   componentDidMount() {
@@ -106,6 +114,7 @@ class CpeSearch extends React.Component {
       modalHttps: true,
       modalUsername: '',
       modalPassword: '',
+      modalCmsNodes: [],
       editing: false,
       editingId: null,
     });
@@ -119,12 +128,22 @@ class CpeSearch extends React.Component {
       modalHttps,
       modalUsername,
       modalPassword,
+      modalCmsNodes,
       systems,
     } = this.state;
 
     let entryObj = null;
 
-    if (modalType === 'cms' || modalType === 'smx') {
+    if (modalType === 'cms') {
+      entryObj = {
+        type: modalType,
+        hostname: modalHostname,
+        username: modalUsername,
+        password: modalPassword,
+        https: modalHttps,
+        cmsNodes: modalCmsNodes,
+      };
+    } else if (modalType === 'smx') {
       entryObj = {
         type: modalType,
         hostname: modalHostname,
@@ -158,6 +177,9 @@ class CpeSearch extends React.Component {
       modalHttps: item.https || false,
       modalUsername: item.username || '',
       modalPassword: item.password || '',
+      modalCmsNodes: item.cmsNodes || [],
+      modalAddCmsHostName: '',
+      modalAddCmsHostType: 'e7',
       editing: true,
       editingId: idx,
     });
@@ -171,13 +193,23 @@ class CpeSearch extends React.Component {
       modalHttps,
       modalUsername,
       modalPassword,
+      modalCmsNodes,
       systems,
       editingId,
     } = this.state;
 
     let entryObj = null;
 
-    if (modalType === 'cms' || modalType === 'smx') {
+    if (modalType === 'cms') {
+      entryObj = {
+        type: modalType,
+        hostname: modalHostname,
+        username: modalUsername,
+        password: modalPassword,
+        https: modalHttps,
+        cmsNodes: modalCmsNodes,
+      };
+    } else if (modalType === 'smx') {
       entryObj = {
         type: modalType,
         hostname: modalHostname,
@@ -215,6 +247,36 @@ class CpeSearch extends React.Component {
     this.handleClose();
   }
 
+  addCmsHost() {
+    const {
+      modalCmsNodes,
+      modalAddCmsHostName,
+      modalAddCmsHostType,
+    } = this.state;
+
+    const newUnit = {
+      name: modalAddCmsHostName,
+      type: modalAddCmsHostType,
+    };
+    modalCmsNodes.push(newUnit);
+    this.setState({
+      modalCmsNodes,
+    }, () => {
+      console.log(this.state.modalCmsNodes);
+    });
+  }
+
+  deleleCmsNode(idx) {
+    const {
+      modalCmsNodes,
+    } = this.state;
+    modalCmsNodes.splice(idx, 1);
+    //setStorage('systems', JSON.stringify(systems));
+    this.setState({
+      modalCmsNodes,
+    });
+  }
+
 
   render() {
     const {
@@ -227,6 +289,9 @@ class CpeSearch extends React.Component {
       modalHttps,
       modalUsername,
       modalPassword,
+      modalAddCmsHostName,
+      modalAddCmsHostType,
+      modalCmsNodes,
       editing,
     } = this.state;
 
@@ -298,6 +363,55 @@ class CpeSearch extends React.Component {
                 <Form.Label>Password</Form.Label>
                 <Form.Control type="text" placeholder="Password" name="modalPassword" value={modalPassword} onChange={this.setText} />
               </Form.Group>
+              { (modalType === 'cms') && (
+                <Row>
+                  <hr />
+                  <Col lg={5}>
+                    <Form.Group controlId="exampleForm.ControlInput1">
+                      <Form.Label>Node Name</Form.Label>
+                      <Form.Control type="text" placeholder="Node Name" name="modalAddCmsHostName" value={modalAddCmsHostName} onChange={this.setText} />
+                    </Form.Group>
+                  </Col>
+                  <Col lg={4}>
+                    <Form.Label>Node Type</Form.Label>
+                    <Form.Control as="select" value={modalAddCmsHostType} name="modalAddCmsHostType" onChange={this.setText}>
+                      { this.modalAddCmsHostSelect.map(item => <option value={item.key}>{item.value}</option>)}
+                    </Form.Control>
+                  </Col>
+                  <Col lg={3}>
+                    <Form.Label>&nbsp;</Form.Label>
+                    <Button variant="primary" onClick={this.addCmsHost} disabled={!modalAddCmsHostName || /\s/.test(modalAddCmsHostName)}>
+                      Add Host
+                    </Button>
+                  </Col>
+                  <Col lg={12}>
+                    <Table striped bordered hover size="sm">
+                      <thead>
+                        <tr>
+                          <th>Node Name</th>
+                          <th>Type</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        { modalCmsNodes.map((node, idx) => {
+                          return (
+                            <tr>
+                              <td>{node.name}</td>
+                              <td>{node.type}</td>
+                              <td>
+                                <Button variant="danger" onClick={() => this.deleleCmsNode(idx)}>
+                                  Delete
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </Table>
+                  </Col>
+                </Row>
+              )}
             </Form>
 
           </Modal.Body>
