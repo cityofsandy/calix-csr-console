@@ -46,7 +46,7 @@ class CalixSmx {
       };
 
       fetch(url, options).then((response) => {
-        console.log(response);
+        // console.log(response);
         responseCode = response.status;
         return response.json();
       }).then((result) => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Row, Col, Form, Card } from 'react-bootstrap';
+import { Button, Row, Col, Form, Card, Spinner } from 'react-bootstrap';
 import CalixCloud from '../../calix/cloud';
 import CalixSmx from '../../calix/smx';
 import CalixCms from '../../calix/cms';
@@ -19,8 +19,10 @@ class CpeSearch extends React.Component {
 
       cloudResultJson: false,
       smxResultJson: [],
+      cmsResultJson: [],
     };
 
+    this.systems = [];
     this.cloudInstance = null;
     this.smxInstances = [];
     this.cmsInstances = [];
@@ -33,30 +35,24 @@ class CpeSearch extends React.Component {
   componentDidMount() {
     const systems = JSON.parse(getStorage('systems'));
     if (systems) {
-      this.setState({
-        systems,
-      }, () => {
-        for (let i = 0; i < systems.length; i++) {
-          const system = systems[i];
-          if (system.type === 'cloud') {
-            this.cloudInstance = new CalixCloud(system.username, system.password);
-            console.log('Calix Cloud Instance Loaded');
-          } else if (system.type === 'smx') {
-            const url = (system.https ? 'https://' : 'http://') + system.hostname + ':18443';
-            this.smxInstances.push(new CalixSmx(system.username, system.password, url));
-            console.log('Calix SMx Instance Loaded');
-          } else if (system.type === 'cms') {
-            const url = (system.https ? 'https://' : 'http://') + system.hostname + (system.https ? ':18443' : ':18080');
-            this.cmsInstances.push(new CalixCms(system.username, system.password, url));
-            console.log('Calix CMS Instance Loaded');
-          }
+      this.systems = systems;
+      for (let i = 0; i < systems.length; i++) {
+        const system = systems[i];
+        if (system.type === 'cloud') {
+          this.cloudInstance = new CalixCloud(system.username, system.password);
+          console.log('Calix Cloud Instance Loaded');
+        } else if (system.type === 'smx') {
+          const url = (system.https ? 'https://' : 'http://') + system.hostname + ':18443';
+          this.smxInstances.push(new CalixSmx(system.username, system.password, url));
+          console.log('Calix SMx Instance Loaded');
+        } else if (system.type === 'cms') {
+          const url = (system.https ? 'https://' : 'http://') + system.hostname + (system.https ? ':18443' : ':18080');
+          this.cmsInstances.push(new CalixCms(system.username, system.password, url, system.cmsNodes));
+          console.log('Calix CMS Instance Loaded');
         }
-        this.cmsInstances[0].getSystems();
-      });
+      }
     } else {
-      this.setState({
-        systems: [],
-      });
+      this.systems = [];
     }
   }
 
@@ -78,8 +74,17 @@ class CpeSearch extends React.Component {
   }
 
   searchAction() {
+    let cloudSearchResolve;
+    let smxSearchResolve;
+    let cmsSearchResolve;
+    const cloudLoadingPromise = new Promise((res) => { cloudSearchResolve = res; });
+    const smxLoadingPromise = new Promise((res) => { smxSearchResolve = res; });
+    const cmsLoadingPromise = new Promise((res) => { cmsSearchResolve = res; });
     this.setState({
       cloudResultJson: {},
+      smxResultJson: [],
+      cmsResultJson: [],
+      loading: true,
     }, () => {
       const {
         searchQuery,
@@ -90,12 +95,16 @@ class CpeSearch extends React.Component {
         case 'fsan':
           if (this.cloudInstance) {
             this.cloudInstance.getDeviceRecordByFsan(searchQuery).then((success) => {
+              cloudSearchResolve();
               this.setState({
                 cloudResultJson: success,
               });
             }, (fail) => {
+              cloudSearchResolve();
               console.log('fail', fail);
             });
+          } else {
+            cloudSearchResolve();
           }
 
           if (this.smxInstances.length > 0) {
@@ -109,9 +118,10 @@ class CpeSearch extends React.Component {
                     instance.getOntFromDeviceSerial(device['device-name'], searchQuery),
                   );
                 });
-                console.log(devicePromises);
+                // console.log(devicePromises);
                 Promise.allSettled(devicePromises).then((values) => {
-                  console.log(values);
+                  smxSearchResolve();
+                  // console.log(values);
                   values.forEach((item) => {
                     if (item.status === 'fulfilled') {
                       smxResultJson.push(item.value);
@@ -125,11 +135,49 @@ class CpeSearch extends React.Component {
                 console.log('fail', fail);
               });
             });
+          } else {
+            smxSearchResolve();
+          }
+
+          if (this.cmsInstances.length > 0) {
+            const cmsResultJson = [];
+            this.cmsInstances.forEach((instance) => {
+              const devices = instance.getSystems();
+              const devicePromises = [];
+
+              devices.forEach((device) => {
+                devicePromises.push(
+                  instance.getOntFromFsan(device, searchQuery),
+                );
+              });
+              Promise.allSettled(devicePromises).then((values) => {
+                cmsSearchResolve();
+                // console.log(values);
+                values.forEach((item) => {
+                  if (item.status === 'fulfilled') {
+                    cmsResultJson.push(item.value);
+                  }
+                });
+                this.setState({
+                  cmsResultJson,
+                });
+              });
+            });
+          } else {
+            cmsSearchResolve();
           }
           break;
         default:
           // default stuff
       }
+
+
+      Promise.allSettled([cloudLoadingPromise, smxLoadingPromise, cmsLoadingPromise]).then(() => {
+        console.log('Finished loading...');
+        this.setState({
+          loading: false,
+        });
+      });
     });
   }
 
@@ -139,6 +187,8 @@ class CpeSearch extends React.Component {
       searchType,
       cloudResultJson,
       smxResultJson,
+      cmsResultJson,
+      loading,
     } = this.state;
     return (
       <React.Fragment>
@@ -164,14 +214,24 @@ class CpeSearch extends React.Component {
               <Col lg={1}>
                 <Form.Group>
                   <Form.Label>&nbsp;</Form.Label>
-                  <Button variant="primary" onClick={this.searchAction}>Search</Button>
+                  <Button variant="primary" onClick={this.searchAction} disabled={loading}>Search</Button>
                 </Form.Group>
               </Col>
             </Row>
           </Card.Body>
         </Card>
-        <br /><br />
-        <CpeShow cloudResultJson={cloudResultJson} smxResultJson={smxResultJson} />
+        <br />
+        <br />
+        { loading ? (
+          <center>
+            <h1>
+              <Spinner animation="grow" />
+              Loading...
+            </h1>
+          </center>
+        ) : (
+          <CpeShow cloudResultJson={cloudResultJson} smxResultJson={smxResultJson} cmsResultJson={cmsResultJson} />
+        )}
       </React.Fragment>
     );
   }

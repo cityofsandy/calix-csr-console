@@ -12,6 +12,7 @@ class CpeShow extends React.Component {
     const {
       cloudResultJson,
       smxResultJson,
+      cmsResultJson,
     } = this.props;
 
     return (
@@ -82,7 +83,7 @@ class CpeShow extends React.Component {
               <h2>SMx</h2>
               <Container>
                 { smxResultJson.map(item => (
-                  <div>
+                  <div key={item['device-name'] + '-' + item['shelf-id'] + '/' + item['slot-id'] + '/' + item['port-id']}>
                     <h5>{item['serial-number']}</h5>
                     <Table striped bordered hover>
                       <thead>
@@ -127,6 +128,87 @@ class CpeShow extends React.Component {
                         <tr>
                           <td>Status</td>
                           <td>{item.status}</td>
+                        </tr>
+                      </tbody>
+                    </Table>
+                  </div>
+                ))}
+              </Container>
+            </Row>
+          </Container>
+        )}
+
+        {cmsResultJson.length > 0 && (
+          <Container>
+            <Row>
+              <h2>CMS</h2>
+              <Container>
+                { cmsResultJson.map(item => (
+                  <div key={item['device-name'] + '-' + item['shelf-id'] + '/' + item['slot-id'] + '/' + item['port-id']}>
+                    <h5>{item['serial-number']}</h5>
+                    <Table striped bordered hover>
+                      <thead>
+                        <tr>
+                          <th>Key</th>
+                          <th>Value</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Ont ID</td>
+                          <td>{item.id.ont._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Model</td>
+                          <td>{item.model._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Mfg Serial Number</td>
+                          <td>{item['mfg-serno']._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Current Software Version</td>
+                          <td>{item['curr-sw-vers']._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Alternate Software Version</td>
+                          <td>{item['alt-sw-vers']._text}</td>
+                        </tr>
+                        <tr>
+                          <td>ONU MAC Address</td>
+                          <td>{item['onu-mac']._text}</td>
+                        </tr>
+                        <tr>
+                          <td>MTA MAC Address</td>
+                          <td>{item['mta-mac']._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Description</td>
+                          <td>{item.descr._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Subscriber ID</td>
+                          <td>{item['subscr-id']._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Admin Status</td>
+                          <td>{item.admin._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Operation State</td>
+                          <td>{item['op-stat']._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Derived State</td>
+                          <td>{item['derived-states']._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Optical Signal Strength</td>
+                          <td>{item['opt-sig-lvl']._text}</td>
+                        </tr>
+                        <tr>
+                          <td>Range Length</td>
+                          <td>{item['range-length']._text + 'm'}</td>
                         </tr>
                       </tbody>
                     </Table>
