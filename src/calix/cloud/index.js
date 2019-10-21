@@ -67,6 +67,9 @@ class CalixCloud {
     return this.jsonRequest(this.url + 'device', 'get', { serialNumber: fsan });
   }
 
+  testConnection() {
+    return this.jsonRequest(this.url + 'device', 'get', { limit: 1 });
+  }
 }
 
 export default CalixCloud;

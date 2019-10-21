@@ -42,7 +42,7 @@ class CpeSearch extends React.Component {
           this.cloudInstance = new CalixCloud(system.username, system.password);
           console.log('Calix Cloud Instance Loaded');
         } else if (system.type === 'smx') {
-          const url = (system.https ? 'https://' : 'http://') + system.hostname + ':18443';
+          const url = (system.https ? 'https://' : 'http://') + system.hostname + (system.https ? ':18443' : ':18080');
           this.smxInstances.push(new CalixSmx(system.username, system.password, url));
           console.log('Calix SMx Instance Loaded');
         } else if (system.type === 'cms') {

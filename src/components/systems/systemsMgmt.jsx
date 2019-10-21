@@ -4,6 +4,11 @@ import { Container, Row, Col, Modal, Button, Form, Table } from 'react-bootstrap
 import { getStorage, setStorage } from '../../js/common';
 import CsrAlert from '../common/alerts';
 import { faGlasses } from '@fortawesome/free-solid-svg-icons';
+import CalixCloud from '../../calix/cloud';
+import CalixSmx from '../../calix/smx';
+import CalixCms from '../../calix/cms';
+import { rejects } from 'assert';
+import { resolve } from 'url';
 
 class CpeSearch extends React.Component {
   constructor(props) {
@@ -13,6 +18,8 @@ class CpeSearch extends React.Component {
       systems: [],
       alertVariant: null,
       alertMessage: null,
+      modalAlertVariant: null,
+      modalAlertMessage: null,
       modalShow: false,
       modalHostname: '',
       modalType: 'cms',
@@ -58,6 +65,13 @@ class CpeSearch extends React.Component {
     this.setState({
       alertVariant,
       alertMessage,
+    });
+  }
+
+  setModalAlert(modalAlertMessage, modalAlertVariant) {
+    this.setState({
+      modalAlertVariant,
+      modalAlertMessage,
     });
   }
 
@@ -169,6 +183,7 @@ class CpeSearch extends React.Component {
   }
 
   editManagementSystem(idx) {
+    this.setModalAlert(null, null);
     const { systems } = this.state;
     const item = systems[idx];
     this.setState({
@@ -228,10 +243,16 @@ class CpeSearch extends React.Component {
 
     systems[editingId] = entryObj;
     setStorage('systems', JSON.stringify(systems));
-    this.setState({
-      systems,
+
+    this.testSystem().then(() => {
+      this.setModalAlert(null, null);
+      this.setState({
+        systems,
+      });
+      this.handleClose();
+    }, (rej) => {
+      this.setModalAlert('Failed to connect to api endpoint: ' + rej.toString(), 'danger');
     });
-    this.handleClose();
   }
 
   deleteManagementSystemAction() {
@@ -277,12 +298,55 @@ class CpeSearch extends React.Component {
     });
   }
 
+  testSystem() {
+    const {
+      modalType,
+      modalUsername,
+      modalPassword,
+      modalHttps,
+      modalHostname,
+      modalCmsNodes,
+    } = this.state;
+
+    return new Promise((resolve, reject) => {
+      if (modalType === 'cloud') {
+        const cloudInstance = new CalixCloud(modalUsername, modalPassword);
+        console.log('Calix Cloud Instance Loaded');
+        cloudInstance.testConnection().then(() => {
+          resolve();
+        }, (fail) => {
+          reject(fail);
+        });
+      } else if (modalType === 'smx') {
+        const url = (modalHttps ? 'https://' : 'http://') + modalHostname + (modalHttps ? ':18443' : ':18080');
+        const smxInstance = new CalixSmx(modalUsername, modalPassword, url);
+        smxInstance.testConnection().then(() => {
+          resolve();
+        }, (fail) => {
+          reject(fail);
+        });
+        console.log('Calix SMx Instance Loaded');
+      } else if (modalType === 'cms') {
+        const url = (modalHttps ? 'https://' : 'http://') + modalHostname + (modalHttps ? ':18443' : ':18080');
+        const cmsInstance = new CalixCms(modalUsername, modalPassword, url, modalCmsNodes);
+        console.log('Calix CMS Instance Loaded');
+        cmsInstance.testConnection().then(() => {
+          resolve();
+        }, (fail) => {
+          reject(fail);
+        });
+      }
+    });
+  }
+
 
   render() {
     const {
       systems,
       alertMessage,
       alertVariant,
+      modalAlertMessage,
+      modalAlertVariant,
       modalShow,
       modalType,
       modalHostname,
@@ -336,7 +400,7 @@ class CpeSearch extends React.Component {
             <Modal.Title>Add/Modify Management System</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-
+            <CsrAlert variant={modalAlertVariant} message={modalAlertMessage} />
             <Form>
               <Form.Group>
                 <Form.Label>System Type</Form.Label>

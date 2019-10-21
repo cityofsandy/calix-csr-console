@@ -91,6 +91,8 @@ class CalixCms {
         .then((success) => {
           if (parseInt(success['auth-reply'].ResultCode._text, 10) === 0) {
             this.sessionId = parseInt(success['auth-reply'].SessionId._text, 10);
+          } else {
+            reject(success['auth-reply'].ResultMessage._text);
           }
           resolve();
         }, (failed) => {
@@ -134,14 +136,14 @@ class CalixCms {
             this.logout().then(() => {
               resolve(res);
             }, (logoutRej) => {
-              reject(new Error('Error logging out', logoutRej));
+              reject(new Error(logoutRej));
             });
           }, (failed) => {
             this.logout();
             reject(failed);
           });
       }, (loginRej) => {
-        reject(new Error('Error logging in', loginRej));
+        reject(new Error(loginRej));
       });
     });
   }
@@ -182,6 +184,22 @@ class CalixCms {
 
   getSystems() {
     return this.nodes || [];
+  }
+
+  testConnection() {
+    return new Promise((resolve, reject) => {
+      // Log into CMS
+      this.login().then(() => {
+        // Log out of CMS when completed
+        this.logout().then(() => {
+          resolve();
+        }, (logoutRej) => {
+          reject(new Error(logoutRej));
+        });
+      }, (loginRej) => {
+        reject(new Error(loginRej));
+      });
+    });
   }
 }
 

@@ -88,6 +88,9 @@ class CalixSmx {
     console.log(this.jsonRequest(this.url + '/es/search', 'get', {_search: query}));
   }
 
+  testConnection() {
+    return this.jsonRequest(this.url + '/security/user/' + this.username, 'get');
+  }
 }
 
 export default CalixSmx;
