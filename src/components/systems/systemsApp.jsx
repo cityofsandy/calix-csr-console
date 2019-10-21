@@ -14,7 +14,7 @@ class Systems extends React.Component {
       modulePrefix: MODULE_PREFIX,
     };
 
-    document.title = global.header.siteTitleAbv + ' :: CPE Dashboard';
+    document.title = global.header.siteTitleAbv + ' :: Systems Management';
   }
 
   render() {

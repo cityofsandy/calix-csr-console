@@ -7,19 +7,18 @@ import CpeSearch from './cpeSearch';
 
 const MODULE_PREFIX = '/cpe';
 
-const DmcaDashboard = ({ match }) => (
+const cpeDashboard = ({ match }) => (
   <React.Fragment>
     <Container>
       <Row>
-        <h1> CPE Page </h1>
+        <h1>CPE Page</h1>
       </Row>
       <CpeSearch />
     </Container>
   </React.Fragment>
-
 );
 
-class Dmca extends React.Component {
+class Cpe extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -35,11 +34,11 @@ class Dmca extends React.Component {
     return (
       <App nav={nav}>
         <div>
-          <Route exact path={modulePrefix} component={DmcaDashboard} />
+          <Route exact path={modulePrefix} component={cpeDashboard} />
         </div>
       </App>
     );
   }
 }
 
-export default Dmca;
+export default Cpe;

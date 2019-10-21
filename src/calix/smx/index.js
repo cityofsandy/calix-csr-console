@@ -91,6 +91,10 @@ class CalixSmx {
   testConnection() {
     return this.jsonRequest(this.url + '/security/user/' + this.username, 'get');
   }
+
+  getAlarms() {
+    return this.jsonRequest(this.url + '/fault/alarm', 'get', { limit: 1000 });
+  }
 }
 
 export default CalixSmx;

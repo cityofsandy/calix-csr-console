@@ -46,7 +46,7 @@ class App extends React.Component {
                   </NavDropdown>
                 </Nav>
                 <Nav>
-                  <Nav.Link eventKey={2} href="#memes">
+                  <Nav.Link eventKey={2} href="https://www.reddit.com/r/okbuddyretard/">
                     Dank memes
                   </Nav.Link>
                 </Nav>

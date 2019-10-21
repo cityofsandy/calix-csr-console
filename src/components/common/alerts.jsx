@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert } from 'react-bootstrap';
 
-const CsrAlert = ({ message, variant }) => {
+const GenericAlert = ({ message, variant }) => {
   const alert = message && variant ? (
     <React.Fragment>
       <br />
@@ -13,4 +13,4 @@ const CsrAlert = ({ message, variant }) => {
   return alert;
 };
 
-export default CsrAlert;
+export default GenericAlert;

@@ -148,6 +148,49 @@ class CalixCms {
     });
   }
 
+  getAlarms(node) {
+    return new Promise((resolve, reject) => {
+      // Log into CMS
+      this.login().then(() => {
+        const body = `
+          <soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+            <soapenv:Body>
+              <rpc message-id="1" nodename="NTWK-${node.name}" sessionid="${this.sessionId}" username="${this.username}">
+              <action>
+              <action-type>show-ont-brief</action-type>
+              <action-args>
+                <linked-pon></linked-pon>
+                <after>
+                  <type>Ont</type>
+                  <id>
+                    <ont>3000</ont>
+                  </id>
+                </after>
+              </action-args>
+            </action>
+              </rpc>
+            </soapenv:Body>
+          </soapenv:Envelope>
+        `;
+        this.xmlSoapRequest(body)
+          .then((success) => {
+            console.log(success);
+            // Log out of CMS when completed
+            this.logout().then(() => {
+              resolve(success);
+            }, (logoutRej) => {
+              reject(new Error(logoutRej));
+            });
+          }, (failed) => {
+            this.logout();
+            reject(failed);
+          });
+      }, (loginRej) => {
+        reject(new Error(loginRej));
+      });
+    });
+  }
+
   showOntSerno(node, fsan) {
     const trimmedFsan = fsan.length > 6 ? fsan.substr(-6, 6) : fsan;
     const body = `

@@ -1,11 +1,10 @@
 import React from 'react';
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faTachometerAlt } from '@fortawesome/free-solid-svg-icons';
-// import { Route } from 'react-router-dom';
-
+import { Container, Row } from 'react-bootstrap';
 import 'react-table/react-table.css';
 import { App } from '../navigation/nav';
 import { global } from '../../config';
+import HomepageAlarms from './homepageAlarms';
+
 
 const MODULE_PREFIX = '/';
 
@@ -25,7 +24,14 @@ class Homepage extends React.Component {
 
     return (
       <App nav={nav}>
-        <h1>HOMEPAGE</h1>
+        <Container>
+          <Row>
+            <h1>Homepage</h1>
+          </Row>
+          <Row>
+            <HomepageAlarms />
+          </Row>
+        </Container>
       </App>
     );
   }
