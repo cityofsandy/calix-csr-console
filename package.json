@@ -6,9 +6,11 @@
     "build": "npm run clean && npm run webpack",
     "webpack": "cross-env NODE_ENV=development node ./node_modules/webpack/bin/webpack --config webpack.dev.js --progress",
     "build-prod": "cross-env NODE_ENV=production node ./node_modules/webpack/bin/webpack --config webpack.prod.js -p --progress",
+    "build-prod-server": "babel ./src/proxy/index.js --out-file ./dist/webServer.js",
     "coverage": "nyc npm run test",
     "clean": "del-cli dist",
-    "serve": "./node_modules/.bin/webpack-dev-server --open --config webpack.dev.js"
+    "serve": "./node_modules/.bin/webpack-dev-server --open --config webpack.dev.js",
+    "start": "node ./dist/webServer.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.6",
@@ -17,6 +19,9 @@
     "@fortawesome/react-fontawesome": "0.1.4-1",
     "base-64": "^0.1.0",
     "bootstrap": "4.3.1",
+    "express": "^4.17.1",
+    "express-history-api-fallback": "^2.2.1",
+    "http-proxy-middleware": "^0.20.0",
     "inspect": "0.0.2",
     "npm": "^5.6.0",
     "ol": "^5.3.1",
@@ -37,6 +42,7 @@
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
+    "@babel/cli": "^7.6.4",
     "@babel/core": "^7.4.0",
     "@babel/node": "^7.0.0",
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",

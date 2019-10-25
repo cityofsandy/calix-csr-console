@@ -148,7 +148,16 @@ class CalixCms {
     });
   }
 
-  getAlarms(node) {
+  getAlarms(node, xmlBody) {
+    let xmlBodyTest = xmlBody;
+
+    if (!xmlBody) {
+      xmlBodyTest = `
+        <action-type>show-alarms</action-type>
+        <action-args/>
+      `;
+    }
+    let totalAlarms = [];
     return new Promise((resolve, reject) => {
       // Log into CMS
       this.login().then(() => {
@@ -156,28 +165,50 @@ class CalixCms {
           <soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
             <soapenv:Body>
               <rpc message-id="1" nodename="NTWK-${node.name}" sessionid="${this.sessionId}" username="${this.username}">
-              <action>
-              <action-type>show-ont-brief</action-type>
-              <action-args>
-                <linked-pon></linked-pon>
-                <after>
-                  <type>Ont</type>
-                  <id>
-                    <ont>3000</ont>
-                  </id>
-                </after>
-              </action-args>
-            </action>
+                <action>
+                  ${xmlBodyTest}
+                </action>
               </rpc>
             </soapenv:Body>
           </soapenv:Envelope>
         `;
         this.xmlSoapRequest(body)
           .then((success) => {
-            console.log(success);
+            // Check for last alarm in list for filter
+            const alarms = success['rpc-reply']['action-reply'].alarm;
+            console.log(alarms);
+            if (alarms.length === 1) {
+              totalAlarms.push(alarms[0]);
+              resolve(totalAlarms);
+            } else if (alarms.length === 0) {
+              resolve(totalAlarms);
+            } else {
+              for (let i = 0; i < alarms.length; i++) {
+                totalAlarms.push(alarms[i]);
+                if (i + 1 === alarms.length) {
+                  // last one
+                  console.log('more to come');
+                  const queryObject = {
+                    'action-type': 'show-alarms',
+                    'action-args': {
+                      'start-instance': alarms[i].object,
+                      'after-alarm': alarms[i]['alarm-type'],
+                    },
+                  };
+                  const xml = convert.js2xml(queryObject, { compact: true, ignoreComment: true, spaces: 4 });
+                  this.getAlarms(node, xml).then((success2) => {
+                    console.log('it is done', success2);
+                    totalAlarms.concat(success2);
+                    resolve(totalAlarms);
+                  }, (failed2) => {
+                    reject(failed2);
+                  });
+                }
+              }
+            }
             // Log out of CMS when completed
             this.logout().then(() => {
-              resolve(success);
+              resolve(totalAlarms);
             }, (logoutRej) => {
               reject(new Error(logoutRej));
             });
@@ -227,6 +258,136 @@ class CalixCms {
 
   getSystems() {
     return this.nodes || [];
+  }
+
+  getRgMgmtUsage(node, id) {
+    return new Promise((resolve, reject) => {
+      // Log into CMS
+      this.login().then(() => {
+        const body = `
+          <soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+            <soapenv:Body>
+              <rpc message-id="1" nodename="NTWK-${node.name}" sessionid="${this.sessionId}" username="${this.username}">
+                <get-config>
+                  <source>
+                    <running/>
+                  </source>
+                  <filter type="subtree">
+                    <top>
+                      <object>
+                        <type>System</type>
+                        <id/>
+                        <children>
+                          <type>OntRg</type>
+                          <attr-list>admin subscr-id descr mgmt-mode wan-protocol static-ip static-ip-mask static-ip-gw pri-dns-server sec-dns-server pppoe-user pppoe-password config-file-instance mgmt-prof tr69-eth-svc tr69-out-tag tr69-in-tag disable-on-batt pbit-map set-remote-access-secs</attr-list>
+                          <attr-filter>
+                            <mgmt-prof>
+                              <type>OntRgMgmtProf</type>
+                              <id>
+                                <ontrgmgmtprof>${id}</ontrgmgmtprof>
+                              </id>
+                            </mgmt-prof>
+                          </attr-filter>
+                        </children>
+                      </object>
+                    </top>
+                  </filter>
+                </get-config>
+              </rpc>
+            </soapenv:Body>
+          </soapenv:Envelope>
+        `;
+        this.xmlSoapRequest(body)
+          .then((success) => {
+            //const promises = [];
+
+            const onts = success['rpc-reply'].data.top.object.children.child;
+
+            if (onts.length > 0) {
+              const ontId = onts[0].id.ont._text;
+              this.updateOntRgProfile(node, 5, ontId).then((suc) => {
+                this.logout().then(() => {
+                  if (onts.length > 1) {
+                    resolve(onts[1].id.ont._text);
+                  } else {
+                    resolve(false);
+                  }
+                }, (logoutRej) => {
+                  reject(new Error(logoutRej));
+                });
+              }, (failed) => {
+                this.logout();
+              });
+            }
+            // onts.forEach((x) => {
+            //   const ontId = x.id.ont._text;
+            //   console.log(ontId);
+            //   promises.push(
+            //     ,
+            //   );
+            // });
+
+            // Promise.allSettled(promises).then(() => {
+            //   console.log('Promsies finished');
+            //   this.logout().then(() => {
+            //     resolve(success);
+            //   }, (logoutRej) => {
+            //     reject(new Error(logoutRej));
+            //   });
+            // });
+          }, (failed) => {
+            this.logout();
+            reject(failed);
+          });
+      }, (loginRej) => {
+        reject(new Error(loginRej));
+      });
+    });
+  }
+
+  updateOntRgProfile(node, newRgId, ontId) {
+    return new Promise((resolve, reject) => {
+      const body = `
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+        <soapenv:Body>
+          <rpc message-id="175" nodename="NTWK-${node.name}" sessionid="${this.sessionId}" username="${this.username}">
+            <edit-config>
+              <target>
+                <running/>
+              </target>
+              <config>
+                <top>
+                  <object operation="merge" >
+                    <type>OntRg</type>
+                    <id>
+                      <ont>${ontId}</ont>
+                      <ontslot>8</ontslot>
+                      <ontrg>1</ontrg>
+                    </id>
+                    <mgmt-prof>
+                      <type>OntRgMgmtProf</type>
+                      <id>
+                        <ontrgmgmtprof>${newRgId}</ontrgmgmtprof>
+                      </id>
+                    </mgmt-prof>
+                  </object>
+                </top>
+              </config>
+            </edit-config>
+          </rpc>
+        </soapenv:Body>
+      </soapenv:Envelope>
+      `;
+      this.xmlSoapRequest(body)
+        .then((success) => {
+          console.log(`Successful RG update for ${ontId}`, success['rpc-reply']);
+          resolve(success);
+        }, (failed) => {
+          console.log(`Failed to update RG for ${ontId}`, failed);
+          reject(failed);
+        });
+    });
   }
 
   testConnection() {
