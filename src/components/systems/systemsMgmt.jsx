@@ -10,7 +10,7 @@ import CalixCms from '../../calix/cms';
 import { rejects } from 'assert';
 import { resolve } from 'url';
 
-class CpeSearch extends React.Component {
+class SystemsManagement extends React.Component {
   constructor(props) {
     super(props);
     this.mounted = false;
@@ -381,7 +381,7 @@ class CpeSearch extends React.Component {
             <tbody>
               { systems.map((system, idx) => {
                 return (
-                  <tr>
+                  <tr key={system.type + system.hostname}>
                     <td>{system.type}</td>
                     <td>{system.hostname}</td>
                     <td>
@@ -405,7 +405,7 @@ class CpeSearch extends React.Component {
               <Form.Group>
                 <Form.Label>System Type</Form.Label>
                 <Form.Control as="select" value={modalType} name="modalType" onChange={this.setText}>
-                  { this.modalTypeSelect.map(item => <option value={item.key}>{item.value}</option>)}
+                  { this.modalTypeSelect.map(item => <option key={item.key} value={item.key}>{item.value}</option>)}
                 </Form.Control>
               </Form.Group>
               { (modalType === 'cms' || modalType === 'smx') && (
@@ -439,7 +439,7 @@ class CpeSearch extends React.Component {
                   <Col lg={4}>
                     <Form.Label>Node Type</Form.Label>
                     <Form.Control as="select" value={modalAddCmsHostType} name="modalAddCmsHostType" onChange={this.setText}>
-                      { this.modalAddCmsHostSelect.map(item => <option value={item.key}>{item.value}</option>)}
+                      { this.modalAddCmsHostSelect.map(item => <option key={item.key} value={item.key}>{item.value}</option>)}
                     </Form.Control>
                   </Col>
                   <Col lg={3}>
@@ -505,4 +505,4 @@ class CpeSearch extends React.Component {
   }
 }
 
-export default CpeSearch;
+export default SystemsManagement;

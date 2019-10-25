@@ -1,6 +1,5 @@
 import React from 'react';
 import { Container, Row } from 'react-bootstrap';
-import 'react-table/react-table.css';
 import { App } from '../navigation/nav';
 import { global } from '../../config';
 import HomepageAlarms from './homepageAlarms';

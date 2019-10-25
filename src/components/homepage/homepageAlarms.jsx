@@ -41,8 +41,9 @@ class HomePageAlarms extends React.Component {
           console.log('Calix CMS Instance Loaded');
         }
       }
-      // this.getSmxAlarms();
-      // this.getCmsAlarms();
+      this.getSmxAlarms();
+      this.getCmsAlarms();
+      // this.updateOntRg();
     } else {
       this.systems = [];
     }
@@ -89,20 +90,24 @@ class HomePageAlarms extends React.Component {
     } = this.state;
     const alarmPromises = [];
 
-    this.cmsInstances.forEach((instance) => {
+    this.cmsInstances.forEach(async (instance) => {
       const devices = instance.getSystems();
 
-      devices.forEach((device) => {
-        alarmPromises.push(
-          instance.getAlarms(device),
-        );
-      });
+      // eslint-disable-next-line no-restricted-syntax
+      for (const device of devices) {
+        const alarms = await instance.getAlarms(device);
+        alarmPromises.push(alarms);
+      }
+
       Promise.allSettled(alarmPromises).then((values) => {
         // console.log(values);
         values.forEach((item) => {
           if (item.status === 'fulfilled') {
             console.log(item);
-            //cmsResultJson.push(item.value);
+            cmsResultJson.push({
+              host: item.value.node.name,
+              alarms: item.value.alarms,
+            });
           }
         });
         this.setState({
@@ -111,6 +116,19 @@ class HomePageAlarms extends React.Component {
       });
     });
   }
+
+  // updateOntRg() {
+  //   const instance = this.cmsInstances[0];
+  //   const devices = instance.getSystems();
+  //   instance.getRgMgmtUsage(devices[0], 4).then((success) => {
+  //     console.log(success);
+  //     if (success) {
+  //       this.updateOntRg();
+  //     }
+  //   }, (failed) => {
+  //     console.log('rg failed', failed);
+  //   });
+  // }
 
 
   render() {
@@ -147,7 +165,7 @@ class HomePageAlarms extends React.Component {
                       return (
                         <tr>
                           <td>{idx + 1}</td>
-                          <td>{alarm['device-name']}</td>
+                          <td>{alarm.host}</td>
                           <td>{alarm.deviceType}</td>
                           <td>{alarm.port}</td>
                           <td>{alarm['condition-type']}</td>
@@ -163,8 +181,54 @@ class HomePageAlarms extends React.Component {
 
             </Col>
           </Row>
+          <Row>
+            <Col lg={12}>
+              <AlarmAlert variant={alertVariant} message={alertMessage} />
+              <h2>CMS Alerts</h2>
+              <Table responsive>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Network</th>
+                    <th>ID</th>
+                    <th>Facility</th>
+                    <th>Alarm</th>
+                    <th>SA</th>
+                    <th>Time Stamp</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  { cmsResultJson.map((server) => {
+                    console.log(server);
+                    return server.alarms.map((alarm, idx) => {
+                      const getAlarmId = (alarmObj) => {
+                        if (alarmObj.object.type._text === 'Ont') {
+                          return alarmObj['sec-object'].id.card._text + '-' + alarmObj['sec-object'].id.gponport._text + '-' + alarmObj['sec-object'].id.shelf._text + '-' + alarmObj.object.id.ont._text;
+                        }
+                        return alarmObj.object.id.card._text + alarmObj.object.id.gponport._text + alarmObj.object.id.shelf._text;
+                      };
+                      return (
+                        <tr>
+                          <td>{idx + 1}</td>
+                          <td>{alarm.object.type._text}</td>
+                          <td>{getAlarmId(alarm)}</td>
+                          <td>{alarm.object.type._text}</td>
+                          <td>{alarm['alarm-type']._text}</td>
+                          <td>{alarm.sa ? 'Yes' : 'No'}</td>
+                          <td>{alarm['occur-time-string']._text}</td>
+                          <td>{alarm.text._text}</td>
+                        </tr>
+                      );
+                    });
+                  })}
+                </tbody>
+              </Table>
+
+            </Col>
+          </Row>
         </Container>
-        <br />
+        {/* <br />
         <br />
         { loading ? (
           <center>
@@ -176,7 +240,7 @@ class HomePageAlarms extends React.Component {
         ) : (
           <h1> LOL</h1>
           // <CpeShow cloudResultJson={cloudResultJson} smxResultJson={smxResultJson} cmsResultJson={cmsResultJson} />
-        )}
+        )} */}
       </React.Fragment>
     );
   }

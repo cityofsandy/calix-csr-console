@@ -17,6 +17,8 @@
     "start": "node ./dist/webServer.js"
   },
   "dependencies": {
+    "@babel/plugin-transform-runtime": "^7.6.2",
+    "@babel/runtime": "^7.6.3",
     "@fortawesome/fontawesome-svg-core": "^1.2.6",
     "@fortawesome/free-regular-svg-icons": "^5.4.1",
     "@fortawesome/free-solid-svg-icons": "^5.4.1",
@@ -52,6 +54,7 @@
     "babel-eslint": "^10.0.1",
     "babel-jest": "^23.6.0",
     "babel-loader": "^8.0.4",
+    "babel-polyfill": "^6.26.0",
     "copy-webpack-plugin": "^5.0.4",
     "core-js": "^2.5.7",
     "cross-env": "^5.2.0",

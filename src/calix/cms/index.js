@@ -148,7 +148,7 @@ class CalixCms {
     });
   }
 
-  getAlarms(node, xmlBody) {
+  pullAlarms(node, xmlBody) {
     let xmlBodyTest = xmlBody;
 
     if (!xmlBody) {
@@ -157,37 +157,40 @@ class CalixCms {
         <action-args/>
       `;
     }
-    let totalAlarms = [];
+    const totalAlarms = [];
+
+    const body = `
+      <soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
+        <soapenv:Body>
+          <rpc message-id="1" nodename="NTWK-${node.name}" sessionid="${this.sessionId}" username="${this.username}">
+            <action>
+              ${xmlBodyTest}
+            </action>
+          </rpc>
+        </soapenv:Body>
+      </soapenv:Envelope>
+    `;
     return new Promise((resolve, reject) => {
-      // Log into CMS
-      this.login().then(() => {
-        const body = `
-          <soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">
-            <soapenv:Body>
-              <rpc message-id="1" nodename="NTWK-${node.name}" sessionid="${this.sessionId}" username="${this.username}">
-                <action>
-                  ${xmlBodyTest}
-                </action>
-              </rpc>
-            </soapenv:Body>
-          </soapenv:Envelope>
-        `;
-        this.xmlSoapRequest(body)
-          .then((success) => {
-            // Check for last alarm in list for filter
-            const alarms = success['rpc-reply']['action-reply'].alarm;
-            console.log(alarms);
+      this.xmlSoapRequest(body)
+        .then((success) => {
+          // Check for last alarm in list for filter
+          let alarms = success['rpc-reply']['action-reply'];
+          if (Object.entries(success['rpc-reply']['action-reply']).length === 0) {
+            resolve([]);
+          } else {
+            alarms = alarms.alarm;
+            //const alarms = success['rpc-reply']['action-reply'].alarm;
+            // console.log('pulled alarms', alarms);
             if (alarms.length === 1) {
               totalAlarms.push(alarms[0]);
               resolve(totalAlarms);
-            } else if (alarms.length === 0) {
-              resolve(totalAlarms);
+            } else if (!Array.isArray(alarms)) {
+              resolve([alarms]);
             } else {
               for (let i = 0; i < alarms.length; i++) {
                 totalAlarms.push(alarms[i]);
                 if (i + 1 === alarms.length) {
                   // last one
-                  console.log('more to come');
                   const queryObject = {
                     'action-type': 'show-alarms',
                     'action-args': {
@@ -195,27 +198,36 @@ class CalixCms {
                       'after-alarm': alarms[i]['alarm-type'],
                     },
                   };
+                  // console.log('more alarms, coming up...', queryObject);
                   const xml = convert.js2xml(queryObject, { compact: true, ignoreComment: true, spaces: 4 });
-                  this.getAlarms(node, xml).then((success2) => {
-                    console.log('it is done', success2);
-                    totalAlarms.concat(success2);
-                    resolve(totalAlarms);
+                  this.pullAlarms(node, xml).then((success2) => {
+                    // console.log(success2);
+                    resolve(totalAlarms.concat(success2));
                   }, (failed2) => {
+                    console.log('failed');
                     reject(failed2);
                   });
                 }
               }
             }
-            // Log out of CMS when completed
-            this.logout().then(() => {
-              resolve(totalAlarms);
-            }, (logoutRej) => {
-              reject(new Error(logoutRej));
-            });
-          }, (failed) => {
-            this.logout();
-            reject(failed);
-          });
+          }
+        }, (failed) => {
+          reject(failed);
+        });
+    });
+  }
+
+  getAlarms(node) {
+    return new Promise((resolve, reject) => {
+      // Log into CMS
+      this.login().then(() => {
+        this.pullAlarms(node).then((res) => {
+          resolve({ node, alarms: res });
+          this.logout();
+        }, (rej) => {
+          this.logout();
+          reject(rej);
+        });
       }, (loginRej) => {
         reject(new Error(loginRej));
       });
