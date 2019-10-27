@@ -2,7 +2,7 @@
   "name": "calix-csr-console",
   "version": "0.0.1",
   "license": "MIT",
-  "main": "server.js",
+  "main": "./dist/webServer.js",
   "description": "Ties in Calix APIs",
   "repository": "https://github.com/cityofsandy/calix-csr-console.git",
   "scripts": {
@@ -17,6 +17,13 @@
     "start": "node ./dist/webServer.js"
   },
   "dependencies": {
+    "@babel/core": "^7.4.0",
+    "@babel/node": "^7.0.0",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/register": "^7.0.0",
+    "@babel/cli": "^7.6.4",
     "@babel/plugin-transform-runtime": "^7.6.2",
     "@babel/runtime": "^7.6.3",
     "@fortawesome/fontawesome-svg-core": "^1.2.6",
@@ -42,15 +49,7 @@
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "@babel/cli": "^7.6.4",
-    "@babel/core": "^7.4.0",
-    "@babel/node": "^7.0.0",
-    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
-    "@babel/preset-env": "^7.1.0",
-    "@babel/preset-react": "^7.0.0",
-    "@babel/register": "^7.0.0",
     "assert": "^1.4.1",
-    "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
     "babel-jest": "^23.6.0",
     "babel-loader": "^8.0.4",
