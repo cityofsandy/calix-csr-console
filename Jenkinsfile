@@ -16,7 +16,6 @@ node {
     
     stage('NPM Build') {
       sh 'npm run build'
-      sh 'npm run coverage'
     }
     
     stage('Quality Gate') {
