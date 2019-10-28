@@ -211,7 +211,7 @@ class HomePageAlarms extends React.Component {
                       return (
                         <tr>
                           <td>{idx + 1}</td>
-                          <td>{alarm.object.type._text}</td>
+                          <td>{server.host}</td>
                           <td>{getAlarmId(alarm)}</td>
                           <td>{alarm.object.type._text}</td>
                           <td>{alarm['alarm-type']._text}</td>
