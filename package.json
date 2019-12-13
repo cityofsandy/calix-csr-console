@@ -36,7 +36,7 @@
     "express-history-api-fallback": "^2.2.1",
     "http-proxy-middleware": "^0.20.0",
     "inspect": "0.0.2",
-    "npm": "^5.6.0",
+    "npm": "^6.13.4",
     "prop-types": "^15.6.2",
     "react": "^16.8.6",
     "react-bootstrap": "^1.0.0-beta.8",
