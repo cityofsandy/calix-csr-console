@@ -42,7 +42,7 @@
     "react-dom": "^16.8.6",
     "react-router-bootstrap": "^0.25.0",
     "react-router-dom": "^5.0.0",
-    "shelljs": "^0.7.8",
+    "shelljs": "^0.8.5",
     "util-inspect": "^0.1.8",
     "utils": "^0.3.1",
     "xml-js": "^1.6.11"
